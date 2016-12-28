@@ -5,8 +5,7 @@
 # single disk, booted from the offical ISO using EFI.
 #
 # To run this script:
-# curl https://rawgit.com/ineentho/scripts/master/setup-arch.sh | bash -
-
+# curl -L https://rawgit.com/ineentho/scripts/master/setup-arch.sh | bash -
 
 ## Check pre-conditions
 
@@ -71,6 +70,14 @@ echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 echo "KEYMAP=sv-latin1" >> "/etc/vconsole.conf"
 
 bootctl install
+
+(
+  echo "title          Arch Linux"
+  echo "linux          /vmlinuz-linux"
+  echo "initrd         /initramfs-linux.img"
+  echo "options        root=/dev/sda2 rw"
+) >> /boot/entries/arch.conf
+
 EOF
 
 reboot
