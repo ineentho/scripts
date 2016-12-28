@@ -76,7 +76,7 @@ bootctl install
   echo "linux          /vmlinuz-linux"
   echo "initrd         /initramfs-linux.img"
   echo "options        root=/dev/sda2 rw"
-) >> /boot/entries/arch.conf
+) >> /boot/loader/entries/arch.conf
 
 EOF
 
