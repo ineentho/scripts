@@ -55,7 +55,7 @@ mount /dev/sda1 /mnt/boot
 
 ## Installation
 
-pacstrap /mnt base base-devel nvim zsh sudo
+pacstrap /mnt base base-devel neovim zsh sudo
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # Execute the rest of the installation inside of a chroot
