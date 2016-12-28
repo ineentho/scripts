@@ -86,4 +86,4 @@ chmod +x post-install.sh
 
 EOF
 
-reboot
+shutdown now
