@@ -82,7 +82,7 @@ bootctl install
 systemctl enable dhcpcd
 
 curl -L https://rawgit.com/ineentho/scripts/master/setup-arch/post-install.sh >> /root/post-install.sh
-chmod +x post-install.sh
+chmod +x /root/post-install.sh
 
 EOF
 
