@@ -2,10 +2,11 @@
 
 # A script for installing Arch according to my own prefernces.
 # Designed to run as is on a clean VirtualBox machine with a
-# single disk, booted from the offical ISO using EFI.
+# single disk, booted from the offical ISO using EFI. This script
+# only takes care of pre-restart operations.
 #
 # To run this script:
-# curl -L https://rawgit.com/ineentho/scripts/master/setup-arch.sh | bash -
+# curl -L https://rawgit.com/ineentho/scripts/master/setup-arch/install.sh | bash -
 
 ## Check pre-conditions
 
@@ -54,7 +55,7 @@ mount /dev/sda1 /mnt/boot
 
 ## Installation
 
-pacstrap /mnt base
+pacstrap /mnt base base-devel nvim zsh sudo
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # Execute the rest of the installation inside of a chroot
@@ -77,6 +78,11 @@ bootctl install
   echo "initrd         /initramfs-linux.img"
   echo "options        root=/dev/sda2 rw"
 ) >> /boot/loader/entries/arch.conf
+
+systemctl enable dhcpcd
+
+curl -L https://rawgit.com/ineentho/scripts/master/setup-arch/post-install.sh >> post-install.sh
+chmod +x post-install.sh
 
 EOF
 
