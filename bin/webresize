@@ -1,0 +1,27 @@
+#!/bin/bash
+
+width=$1
+shift
+
+height=$1
+shift
+
+outdir=$1
+shift
+
+function doresize {
+    image=$1
+    scale=$2
+    nameend=$3
+    name=$(basename $image | cut -d'.' -f1)
+    x4=$((width * $scale))x$((height * $scale))
+    convert $image -resize $x4 -gravity center -background transparent -extent $x4 ${outdir}/${name}${nameend}.png
+}
+
+
+for image in "$@"
+do
+    doresize $image 4 'x4'
+    doresize $image 2 'x2'
+    doresize $image 1 ''
+done
