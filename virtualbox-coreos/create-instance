@@ -5,8 +5,13 @@ if [[ -z $VDI_TEMPLATE ]]; then
     exit
 fi
 
+if [[ -z $DISCOVERY_URL ]]; then
+    echo "DISCOVERY_URL not set"
+    exit
+fi
+
 if [[ -z $ ]]; then
-  VDI_STORAGE="/vmstroage/vdis/"
+  VDI_STORAGE="/vmstroage/vdis"
 fi
 
 echo "Env:"
@@ -46,27 +51,29 @@ function get_next_name {
 function setup_vm {
   local vmname=$1
   local hdfile="$VDI_STORAGE/$vmname.vdi"
-  local configdrive_dir=$(mktemp -dt coreos-config-drive.XXXXXXXXXX)
-  local configdrive="$configdrive_dir/$vmname.iso"
+  local configdrive="$VDI_STORAGE/$vmname.configdrive.img"
+  local configdrive_vmdk="$VDI_STORAGE/$vmname.configdrive.vmdk"
 
   echo "Disk file: $hdfile"
   echo "Config-drive: $configdrive"
   echo
 
-  ./lib/create-basic-configdrive -H $vmname -S ~/.ssh/id_rsa.pub -p $configdrive_dir
-  vboxmanage clonehd "$VDI_TEMPLATE" $hdfile
+  cat cl-config | ct | ./ignition-disk-gen > $configdrive
+  vboxmanage internalcommands createrawvmdk -filename $configdrive_vmdk -rawdisk $configdrive
+
+  vboxmanage clonehd --format VDI "$VDI_TEMPLATE" $hdfile
   vboxmanage modifyhd $hdfile --resize $((64 * 1024)) #64GB
 
   vboxmanage createvm --name $vmname --ostype Linux26_64 --register
 
   vboxmanage storagectl $vmname --name "SATA Controller" --add sata --controller IntelAHCI
   vboxmanage storageattach $vmname --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium $hdfile
+  vboxmanage storageattach $vmname --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium "$configdrive_vmdk"
 
-  vboxmanage storagectl $vmname --name "IDE Controller" --add ide
-  vboxmanage storageattach $vmname --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "$configdrive"
+  vboxmanage modifyvm "$vmname" --vrde on
 
   vboxmanage modifyvm $vmname --ioapic on
-  vboxmanage modifyvm $vmname --boot1 dvd --boot2 disk
+  vboxmanage modifyvm $vmname --boot1 disk --boot2 disk
   vboxmanage modifyvm $vmname --memory 2048
   vboxmanage modifyvm $vmname --nic1 bridged --bridgeadapter1 enp2s0
 

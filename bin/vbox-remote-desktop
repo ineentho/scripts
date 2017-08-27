@@ -1,0 +1,7 @@
+#!/bin/bash
+
+vmname=$1
+
+./vbox-shutdown "$vmname"
+vboxmanage modifyvm "$vmname" --vrde on
+vboxmanage startvm "$vmname" --type headless

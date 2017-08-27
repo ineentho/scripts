@@ -1,0 +1,11 @@
+etcd:
+    advertise_client_urls:       http://henrik.ninja:2379
+    initial_advertise_peer_urls: http://10.0.0.3.1:2380
+    listen_client_urls:          http://0.0.0.0:2379
+    listen_peer_urls:            http://10.0.0.3.1:2380
+    discovery:                   https://discovery.etcd.io/<token> 
+passwd:
+    users:
+        - name: core
+          ssh_authorized_keys:
+            - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNo7z91yh+U6OfJ/3BvlMlONmlAdbToCaCft+yNWDqMyOCtqhzKR+3MC0/mHF6Apj0NKynglyAbHt9Ah2R2bCf2kmPuCi0DxsSyOt4bdmxchXth/I3fkCW/bIE7+MAUTPC5r3ncgRgVW08rYF7sFgR9ICyPZGhqQiL+25cdYtR9VCZCX9nKFacqv7RnNMC+SLiJnOCph6Pz7xTnujZS/XSzapfTar5Nka+v075tlYZS2qIYUR6uuOa5UO0GCuhN3Y7wmf8NzfdN5HggJPFefugSMtHmqVi/8IFY0L4mH8PJLSBgTvrolg90+keDHXdQyPTarBItTmriu7DwJz2EpfN ineentho@localhost"

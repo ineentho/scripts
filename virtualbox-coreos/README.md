@@ -1,22 +1,20 @@
 
-
 ```
-# Download scripts to ./lib
-./get-scripts
-
-# Create template
+# Folder structure
 mkdir -p /vmstorage/vdi-templates/
 mkdir -p /vmstorage/vdis/
-./lib/create-coreos-vdi -d /vmstorage/vdi-templates/
-echo 'export VDI_TEMPLATE="/vmstorage/vdi-templates/coreos_production_1465.6.0.vdi"' > env
-echo 'export VDI_STORAGE="/vmstorage/vdis/"' >> env
+
+# Download the latest `coreos_production_virtualbox_image.vmdk.bz2` from https://stable.release.core-os.net/amd64-usr/ and extract it
+curl 'https://stable.release.core-os.net/amd64-usr/current/coreos_production_virtualbox_image.vmdk.bz2' | bzip2 -d > /vmstorage/vdi-templates/coreos_production_virtualbox_image.vmdk
+
+
+# Create template
+echo 'export VDI_TEMPLATE="/vmstorage/vdi-templates/coreos_production_virtualbox_image.vmdk"' > env
+echo 'export DISCOVERY_URL="https://discovery.etcd.io/XXXXXXXXXXXX"' >> env
+echo 'export VDI_STORAGE="/vmstorage/vdis"' >> env
 
 # Create Virtualbox VM
 (source env; ./create-instance)
-
-# Remove the config-drive before starting again
-vboxmanage storageattach coreos-X --storagectl "IDE Controller" --port 0 --device 0 --medium none
-
 ```
 
 

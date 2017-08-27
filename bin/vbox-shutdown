@@ -1,0 +1,18 @@
+#!/bin/bash
+
+vmname=$1
+
+vboxmanage controlvm "$vmname" acpipowerbutton
+
+i=0
+
+while [ -n "$(vboxmanage list runningvms | grep "$vmname")" ]; do
+    i=$((i+1))
+    echo "Waiting for graceful shutdown"; 
+    sleep 1;
+
+    if [ $i -eq 10 ]; then
+        echo Force shutdown
+        vboxmanage controlvm "$vmname" poweroff
+    fi
+done
