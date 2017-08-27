@@ -1,0 +1,79 @@
+#!/bin/bash
+
+if [[ -z $VDI_TEMPLATE ]]; then
+    echo "VDI_TEMPLATE not set"
+    exit
+fi
+
+if [[ -z $ ]]; then
+  VDI_STORAGE="/vmstroage/vdis/"
+fi
+
+echo "Env:"
+echo "VDI_TEMPLATE: $VDI_TEMPLATE"
+echo "VDI_STORAGE: $VDI_STORAGE"
+
+function get_latest_vm {
+  local max=0
+
+  while read line; do
+    if [[ $line =~ "\"coreos\"" ]]; then
+      if [[ 1 > $max ]]; then
+        max=1
+      fi
+    fi
+
+    vmreg="\"coreos-([0-9]+)\""
+
+    if [[ $line =~ $vmreg ]]; then
+      num="${BASH_REMATCH[1]}"
+      if [[ $num -gt $max ]]; then
+        max=$num
+      fi
+    fi
+  done <<< "$(vboxmanage list vms)"
+
+  echo $max
+}
+
+function get_next_name {
+  nextvm=$(($(get_latest_vm) + 1))
+  name="coreos-$nextvm"
+
+  echo $name
+}
+
+function setup_vm {
+  local vmname=$1
+  local hdfile="$VDI_STORAGE/$vmname.vdi"
+  local configdrive_dir=$(mktemp -dt coreos-config-drive.XXXXXXXXXX)
+  local configdrive="$configdrive_dir/$vmname.iso"
+
+  echo "Disk file: $hdfile"
+  echo "Config-drive: $configdrive"
+  echo
+
+  ./lib/create-basic-configdrive -H $vmname -S ~/.ssh/id_rsa.pub -p $configdrive_dir
+  vboxmanage clonehd "$VDI_TEMPLATE" $hdfile
+  vboxmanage modifyhd $hdfile --resize $((64 * 1024)) #64GB
+
+  vboxmanage createvm --name $vmname --ostype Linux26_64 --register
+
+  vboxmanage storagectl $vmname --name "SATA Controller" --add sata --controller IntelAHCI
+  vboxmanage storageattach $vmname --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium $hdfile
+
+  vboxmanage storagectl $vmname --name "IDE Controller" --add ide
+  vboxmanage storageattach $vmname --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "$configdrive"
+
+  vboxmanage modifyvm $vmname --ioapic on
+  vboxmanage modifyvm $vmname --boot1 dvd --boot2 disk
+  vboxmanage modifyvm $vmname --memory 2048
+  vboxmanage modifyvm $vmname --nic1 bridged --bridgeadapter1 enp2s0
+
+  # vboxmanage modifyvm $vmname --firmware efi
+}
+
+vmname=$(get_next_name)
+setup_vm $vmname
+
+vboxmanage startvm $vmname --type headless
