@@ -1,0 +1,12 @@
+#!/bin/bash
+
+vmname=$1
+
+echo "1 $1 2 $2 3 $3"
+
+if [ -z $vmname ]; then
+  echo "Usage: create-instance vmname"
+  exit
+fi
+	
+# vim: expandtab:shiftwidth=2:softtabstop=2

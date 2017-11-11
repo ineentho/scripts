@@ -2,6 +2,6 @@
 
 vmname=$1
 
-./vbox-shutdown "$vmname"
+vbox-shutdown "$vmname"
 vboxmanage modifyvm "$vmname" --vrde on
 vboxmanage startvm "$vmname" --type headless

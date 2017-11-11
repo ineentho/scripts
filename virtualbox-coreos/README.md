@@ -10,7 +10,6 @@ curl 'https://stable.release.core-os.net/amd64-usr/current/coreos_production_vir
 
 # Create template
 echo 'export VDI_TEMPLATE="/vmstorage/vdi-templates/coreos_production_virtualbox_image.vmdk"' > env
-echo 'export DISCOVERY_URL="https://discovery.etcd.io/XXXXXXXXXXXX"' >> env
 echo 'export VDI_STORAGE="/vmstorage/vdis"' >> env
 
 # Create Virtualbox VM

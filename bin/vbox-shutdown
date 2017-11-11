@@ -2,6 +2,7 @@
 
 vmname=$1
 
+echo "ACPI poweroff $vmname"
 vboxmanage controlvm "$vmname" acpipowerbutton
 
 i=0

@@ -1,11 +1,80 @@
 etcd:
-    advertise_client_urls:       http://henrik.ninja:2379
-    initial_advertise_peer_urls: http://10.0.0.3.1:2380
+    name:                        $NAME
     listen_client_urls:          http://0.0.0.0:2379
-    listen_peer_urls:            http://10.0.0.3.1:2380
-    discovery:                   https://discovery.etcd.io/<token> 
+    advertise_client_urls:       http://$IP_ADDRESS:2379
+    listen_peer_urls:            http://$IP_ADDRESS:2380
+    initial_advertise_peer_urls: http://$IP_ADDRESS:2380
+    initial_cluster:             $ETCD_INITIAL_CLUSTER
+    initial_cluster_token:       etcd-cluster-2
+    initial_cluster_state:       $ETCD_INITIAL_CLUSTER_STATE
+
+storage:
+  files:
+    - filesystem: "root"
+      path:       "/etc/hostname"
+      mode:       0644
+      contents:
+        inline: $NAME
+    - filesystem: "root"
+      path:       "/etc/flannel/options.env"
+      mode:       0644
+      contents: |
+        FLANNELD_IFACE=$IP_ADDRESS
+    - filesystem: "root"
+      path:       "/etc/kubernetes/cni/docker_opts_cni.env"
+      mode:       0644
+      contents: |
+        DOCKER_OPT_BIP=""
+        DOCKER_OPT_IPMASQ=""
+    - filesystem: "root"
+      path:       "/etc/kubernetes/cni/net.d/10-flannel.conf"
+      mode:       0644
+      contents: |
+        {
+            "name": "podnet",
+            "type": "flannel",
+            "delegate": {
+                "isDefaultGateway": true
+            }
+        }
+
+
 passwd:
     users:
         - name: core
           ssh_authorized_keys:
             - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNo7z91yh+U6OfJ/3BvlMlONmlAdbToCaCft+yNWDqMyOCtqhzKR+3MC0/mHF6Apj0NKynglyAbHt9Ah2R2bCf2kmPuCi0DxsSyOt4bdmxchXth/I3fkCW/bIE7+MAUTPC5r3ncgRgVW08rYF7sFgR9ICyPZGhqQiL+25cdYtR9VCZCX9nKFacqv7RnNMC+SLiJnOCph6Pz7xTnujZS/XSzapfTar5Nka+v075tlYZS2qIYUR6uuOa5UO0GCuhN3Y7wmf8NzfdN5HggJPFefugSMtHmqVi/8IFY0L4mH8PJLSBgTvrolg90+keDHXdQyPTarBItTmriu7DwJz2EpfN ineentho@localhost"
+            - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7H0V6Y4fSDJc7/E56/IET5t55BpGZlVZDXQInitB602Q8PIHUvIu3PJQ0Mmm37LtEmU3NndSS4zdF7KyTsjdm9cb7AK+c0MO1nRTSzbNlkraro/7l+EDOFqAlEEP71ONfYa9IgIpqSV7pw6D35iXHtQr8LqIa397oBBaVrKrv8KhWN/oCvB3Ji3iNBpkpFLvzM8cyozLAi1/t/oRPXMJRbQk8yVag09zcBmDqDH85I4F7n2VMBisYoHiOikTKCLjcouNvJQrw8ZZqDf5zIfahOHrkAZUElR/fCc0OzJMgrO1HoM95kXMr9XevNO4DpI7REOGUleSFSRozOnarPitf henrik@localhost"
+
+flannel: ~
+
+systemd:
+    units:
+        - name: flanneld.service
+          enabled: true
+          dropins:
+            - name: 40-ExecStartPre-symlink.conf
+              contents: |
+                [Service]
+                ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+        - name: docker.service
+          dropins:
+            - name: 40-flannel.conf
+              contents: |
+                [Unit]
+                Requires=flanneld.service
+                After=flanneld.service
+                [Service]
+                EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+
+networkd:
+  units:
+    - name: 00-eth0.network
+      contents: |
+        [Match]
+        Name=enp0s3
+
+        [Network]
+        DNS=10.0.0.1
+        Address=$IP_ADDRESS/8
+        Gateway=10.0.0.1

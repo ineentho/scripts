@@ -1,0 +1,44 @@
+#!/bin/bash
+
+function print_usage {
+  echo "Usage: create-instance vmname iso"
+}
+
+vmname=$1
+iso=$2
+
+if [ -z $vmname ]; then
+  print_usage
+  exit
+fi
+
+if [ -z $iso ]; then
+  print_usage
+  exit
+fi
+
+if [[ -z $VDI_STORAGE ]]; then
+  VDI_STORAGE="/vmstorage/vdis"
+fi
+
+hdfile="$VDI_STORAGE/$vmname.vdi"
+
+vboxmanage createhd --filename "$hdfile" --size $((1024 * 512)) #512GB
+vboxmanage createvm --name $vmname --ostype Linux26_64 --register
+
+vboxmanage storagectl $vmname --name "SATA Controller" --add sata --controller IntelAHCI
+vboxmanage storageattach $vmname --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$hdfile"
+vboxmanage storageattach $vmname --storagectl "SATA Controller" --port 1 --device 0 --type dvddrive --medium "$iso"
+
+vboxmanage modifyvm "$vmname" --vrde on
+
+vboxmanage modifyvm $vmname --ioapic on
+vboxmanage modifyvm $vmname --boot1 disk --boot2 disk
+vboxmanage modifyvm $vmname --memory $((1024 * 6)) #6GB
+vboxmanage modifyvm $vmname --nic1 bridged --bridgeadapter1 enp2s0
+
+vboxmanage modifyvm $vmname --firmware efi
+
+vboxmanage startvm $vmname --type headless
+
+# vim: expandtab:shiftwidth=2:softtabstop=2
