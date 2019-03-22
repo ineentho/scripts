@@ -32,7 +32,7 @@ timedatectl set-ntp true
   echo n         # Create new partition (EFI/boot)
   echo           # Choose default partition number
   echo           # Default first sector
-  echo +512M{MG} # Choose size
+  echo +512M     # Choose size
   echo ef00      # Type: EFI System
   
   echo n         # Create new partition (Main)
